@@ -94,12 +94,6 @@ MicServ1-SOC/
 - `DELETE /api/users/profile` - Eliminar cuenta
 - `GET /api/users/:id` - Obtener usuario por ID (admin)
 
-#### Gestión de Direcciones
-- `GET /api/addresses` - Listar direcciones del usuario
-- `POST /api/addresses` - Crear nueva dirección
-- `PUT /api/addresses/:id` - Actualizar dirección
-- `DELETE /api/addresses/:id` - Eliminar dirección
-
 #### Usuarios Invitados
 - `POST /api/guest/session` - Crear sesión de invitado
 - `GET /api/guest/features` - Obtener funcionalidades disponibles
