@@ -69,12 +69,12 @@ MicServ1-SOC/
 ```
 
 ## 🔧 Tecnologías Previstas
-
-- **Framework**: Node.js con Express.js / Python con FastAPI (a definir)
-- **Base de Datos**: PostgreSQL / MongoDB (a definir)
-- **Autenticación**: JWT (JSON Web Tokens)
-- **Seguridad**: bcrypt, helmet, rate-limiting
-- **Validación**: Joi / express-validator
+- **Lenguaje**: Python
+- **API Framework**: FastAPI
+- **Base de Datos**: No relacional MongoDB
+- **Autenticación**: Python JOSE JWT (JSON Web Tokens)
+- **Seguridad**: bcrypt, ratelimit, Redis
+- **Validación**: Pydantic
 - **Documentación API**: Swagger/OpenAPI
 
 ## 🚀 Características Principales
@@ -104,7 +104,7 @@ MicServ1-SOC/
 - Encriptación de contraseñas con bcrypt
 - Validación de entrada en todos los endpoints
 - Rate limiting para prevenir ataques DDoS
-- Headers de seguridad con Helmet
+- Gestión de tokens de sesión (JWT)
 - Protección CSRF
 - Sanitización de datos
 - Logging de auditoría
