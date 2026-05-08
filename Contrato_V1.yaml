@@ -1,0 +1,815 @@
+openapi: 3.0.0
+info:
+  title: Gestión de identidad y clientes (Identity Service)
+  version: 1.0.0
+  description: Microservicio REST encargado de gestionar la autenticación y autorización de la plataforma de e-commerce. Permite el registro e inicio de sesión de usuarios, define roles (Registrado/Invitado) y emite tokens seguros (JWT) para acceder al resto de los microservicios.
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Autenticación
+      summary: Registro de nuevos usuarios
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema:
+              type: object
+              required:
+                - nombre
+                - apellidoMaterno
+                - apellidoPaterno
+                - correoElectronico
+                - contraseña
+              properties:
+                nombre:
+                  type: string
+                apellidoMaterno:
+                  type: string
+                apellidoPaterno:
+                  type: string
+                correoElectronico:
+                  type: string
+                  format: email
+                contraseña:
+                  type: string
+                  format: password
+                numeroCelular:
+                  type: string
+            examples:
+              Petición Válida:
+                summary: Ejemplo de un registro exitoso
+                value:
+                  nombre: "Juan"
+                  apellidoPaterno: "Pérez"
+                  apellidoMaterno: "García"
+                  correoElectronico: "juan.perez@ejemplo.com"
+                  contraseña: "SecurePass123!"
+                  numeroCelular: "+525512345678"
+              Petición Inválida:
+                summary: Email con formato incorrecto
+                value:
+                  nombre: "Juan"
+                  apellidoPaterno: "Pérez"
+                  apellidoMaterno: "García"
+                  correoElectronico: "juan.perez-arroba-ejemplo.com"
+                  contraseña: "123"
+      responses: 
+        '201':
+          description: Usuario registrado correctamente
+          content: 
+            application/json: 
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  nombre:
+                    type: string
+                  correoElectronico:
+                    type: string
+                  mensaje:
+                    type: string
+              examples:
+                Éxito:
+                  value:
+                    id: "usr_12345abc"
+                    nombre: "Juan"
+                    correoElectronico: "juan.perez@ejemplo.com"
+                    mensaje: "Usuario registrado exitosamente"
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+              examples:
+                Error de Validación:
+                  value:
+                    statusCode: 400
+                    message: "Errores de validación"
+                    errors:
+                      - field: "correoElectronico"
+                        message: "Debe ser un correo electrónico válido."
+        '409':
+          description: Conflicto - El correo ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorConflict'
+              examples:
+                Usuario Duplicado:
+                  value:
+                    statusCode: 409
+                    message: "El correo electrónico ya está registrado."
+  /api/auth/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Inicio de sesión de usuarios
+      description: Autentica al usuario mediante credenciales y devuelve un token de acceso (JWT) y un token de refresco.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - correoElectronico
+                - contraseña
+              properties:
+                correoElectronico:
+                  type: string
+                  format: email
+                contraseña:
+                  type: string
+                  format: password
+            examples:
+              Credenciales Válidas:
+                summary: Usuario existente
+                value:
+                  correoElectronico: "juan.perez@ejemplo.com"
+                  contraseña: "SecurePass123!"
+              Credenciales Inválidas:
+                summary: Contraseña incorrecta
+                value:
+                  correoElectronico: "juan.perez@ejemplo.com"
+                  contraseña: "PasswordIncorrecto"
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    description: Token JWT para acceso a recursos protegidos.
+                  refreshToken:
+                    type: string
+                    description: Token para obtener un nuevo accessToken.
+                  expiresIn:
+                    type: integer
+                    description: Tiempo de vida del token en segundos.
+                  usuario:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      nombre:
+                        type: string
+                      rol:
+                        type: string
+              examples:
+                Éxito:
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    expiresIn: 3600
+                    usuario:
+                      id: "usr_12345abc"
+                      nombre: "Juan"
+                      rol: "CLIENTE"
+        '400':
+          description: Petición mal formada (falta email o contraseña)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+              examples:
+                Faltan Campos:
+                  value:
+                    statusCode: 400
+                    message: "Faltan campos obligatorios"
+        '401':
+          description: Credenciales inválidas (No autorizado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+              examples:
+                Auth Fallida:
+                  value:
+                    statusCode: 401
+                    message: "Correo electrónico o contraseña incorrectos."
+  /api/auth/logout:
+    post:
+      tags:
+        - Autenticación
+      summary: Cierre de sesión
+      description: Invalida el token de refresco del usuario para evitar su reutilización. Requiere el token de acceso en la cabecera.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: El token de refresco que se desea invalidar (opcional si se usa Bearer Token).
+            examples:
+              Cerrar sesión explícita:
+                value:
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Sesión cerrada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                Éxito:
+                  value:
+                    message: "Sesión cerrada exitosamente."
+        '401':
+          description: No autorizado (Token inválido o expirado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+              examples:
+                Token Expirado:
+                  value:
+                    statusCode: 401
+                    message: "Token expirado o inválido."
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorServer'
+  /api/auth/refresh:
+    post:
+      tags:
+        - Autenticación
+      summary: Renovación de token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+            examples:
+              Petición Válida:
+                summary: Ejemplo de renovación exitosa
+                value:
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              Petición Inválida:
+                summary: Refresh token malformado
+                value:
+                  refreshToken: "token_invalido"
+      responses:
+        '200':
+          description: Token renovado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  expiracion:
+                    type: string
+                    format: date-time
+                  mensaje:
+                    type: string
+              examples:
+                Éxito:
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    expiracion: "2023-10-27T15:00:00Z"
+                    mensaje: "Token renovado exitosamente"
+        '400':
+          description: Datos de entrada inválidos o formato incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+              examples:
+                Error de Validación:
+                  value:
+                    statusCode: 400
+                    message: "El refresh token es inválido o está malformado."
+        '401':
+          description: Refresh token expirado o no autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+              examples:
+                Token Expirado:
+                  value:
+                    statusCode: 401
+                    message: "El refresh token ha expirado. Inicie sesión nuevamente."
+                    action: "REDIRECT_TO_LOGIN"
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorServer'
+              examples:
+                Error Inesperado:
+                  value:
+                    statusCode: 500
+                    message: "Ocurrió un error inesperado al procesar la solicitud."
+  /api/auth/forgot-password:
+    post:
+      tags:
+        - Autenticación
+      summary: Recuperación de contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - correoElectronico
+              properties:
+                correoElectronico:
+                  type: string
+                  format: email
+            examples:
+              Petición Válida:
+                summary: Ejemplo de solicitud de recuperación
+                value:
+                  correoElectronico: "juan.perez@ejemplo.com"
+              Petición Inválida:
+                summary: Email con formato incorrecto
+                value:
+                  correoElectronico: "juan.perez-arroba-ejemplo.com"
+      responses:
+        '200':
+          description: Solicitud procesada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensaje:
+                    type: string
+                  action:
+                    type: string
+              examples:
+                Éxito:
+                  value:
+                    mensaje: "Se ha enviado un correo con instrucciones para restablecer la contraseña."
+                    action: "CHECK_EMAIL"
+        '400':
+          description: Datos de entrada inválidos o formato incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+              examples:
+                Error de Validación:
+                  value:
+                    statusCode: 400
+                    message: "Debe proporcionar un correo electrónico válido."
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+              examples:
+                Usuario Inexistente:
+                  value:
+                    statusCode: 404
+                    message: "No existe un usuario registrado con el correo 'juan.perez@ejemplo.com'."
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorServer'
+              examples:
+                Error Inesperado:
+                  value:
+                    statusCode: 500
+                    message: "Ocurrió un error inesperado al procesar la solicitud."
+
+  /api/users/profile:
+    get:
+      summary: Obtener perfil del usuario
+      description: Retorna la información detallada del usuario actual basado en su token.
+      tags:
+        - Gestión de Usuarios
+      responses:
+        '200':
+          description: Perfil encontrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+              examples:
+                Perfil Brayhan:
+                  summary: Datos actuales de Brayhan
+                  value:
+                    id: 540
+                    nombre: "Brayhan"
+                    apellidoPaterno: "Hoyos"
+                    apellidoMaterno: "Hernandez"
+                    email: "brayhan26@gmail.com"
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Token Faltante:
+                  value:
+                    mensaje: "No se ha enviado el token de autorización."
+                Token Expirado:
+                  value:
+                    mensaje: "El token de sesión ha caducado. Por favor inicie sesión nuevamente."
+
+    put:
+      summary: Actualizar perfil
+      description: Permite modificar los datos del usuario.
+      tags:
+        - Gestión de Usuarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioInput'
+            examples:
+              Actualizar Email:
+                summary: Cambio de correo principal
+                value:
+                  nombre: "Brayhan Hoyos"
+                  email: "Pikachu11@hotmail.com"
+      responses:
+        '200':
+          description: Perfil actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+              examples:
+                Exito:
+                  value:
+                    id: 540
+                    nombre: "Brayhan Hoyos"
+                    apellidoPaterno: "Hoyos"
+                    apellidoMaterno: "Hernandez"
+                    email: "Pikachu11@hotmail.com"
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Email Invalido:
+                  value:
+                    mensaje: "El formato del correo 'Pikachu11' no es válido."
+
+    delete:
+      summary: Eliminar cuenta
+      description: Elimina permanentemente la cuenta del usuario y sus datos.
+      tags:
+        - Gestión de Usuarios
+      responses:
+        '204':
+          description: Cuenta eliminada exitosamente (Sin contenido)
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Error Auth:
+                  value:
+                    mensaje: "Credenciales inválidas para realizar la eliminación."
+
+  /api/users/{id}:
+    get:
+      tags:
+        - Gestión de Usuarios
+      summary: Obtener usuario por ID (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Identificador único del usuario
+      security:
+        - bearerAuth: []   # Requiere autenticación con rol administrador
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  nombre:
+                    type: string
+                  apellidoPaterno:
+                    type: string
+                  apellidoMaterno:
+                    type: string
+                  correoElectronico:
+                    type: string
+                  numeroCelular:
+                    type: string
+                  rol:
+                    type: string
+                  creadoEn:
+                    type: string
+                    format: date-time
+              examples:
+                Éxito:
+                  value:
+                    id: "usr_12345abc"
+                    nombre: "Juan"
+                    apellidoPaterno: "Pérez"
+                    apellidoMaterno: "García"
+                    correoElectronico: "juan.perez@ejemplo.com"
+                    numeroCelular: "+525512345678"
+                    rol: "Registrado"
+                    creadoEn: "2023-10-27T14:30:00Z"
+        '400':
+          description: ID inválido o malformado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorBadRequest'
+              examples:
+                Error de Validación:
+                  value:
+                    statusCode: 400
+                    message: "El parámetro 'id' no tiene un formato válido."
+        '401':
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+              examples:
+                No Autenticado:
+                  value:
+                    statusCode: 401
+                    message: "Debe proporcionar un token válido."
+        '403':
+          description: Prohibido - El rol no tiene permisos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+              examples:
+                Sin Permisos:
+                  value:
+                    statusCode: 403
+                    message: "El rol actual no tiene permisos para acceder a este recurso."
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+              examples:
+                Usuario Inexistente:
+                  value:
+                    statusCode: 404
+                    message: "No existe un usuario con el ID 'usr_99999xyz'."
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorServer'
+              examples:
+                Error Inesperado:
+                  value:
+                    statusCode: 500
+                    message: "Ocurrió un error inesperado al procesar la solicitud."
+
+  /api/guest/session:
+    post:
+      summary: Crear sesión de invitado
+      description: Genera una sesión temporal para un usuario invitado y retorna un token de acceso.
+      tags:
+        - Invitado
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestSessionInput'
+      responses:
+        '201':
+          description: Sesión de invitado creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestSession'
+        '400':
+          description: Solicitud inválida
+
+  /api/guest/features:
+    get:
+      summary: funcionalidades disponibles
+      description: Retorna la lista de funcionalidades accesibles para un usuario invitado.
+      tags:
+        - Invitado
+      responses:
+        '200':
+          description: Lista de funcionalidades obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Feature'
+              examples:
+                ejemplo:
+                  value:
+                    - id: 1
+                      nombre: "Ver catálogo"
+                      descripcion: "Permite ver productos disponibles sin iniciar sesión."
+                      disponible: true
+                    - id: 2
+                      nombre: "Buscar productos"
+                      descripcion: "Permite hacer búsquedas dentro del catálogo."
+                      disponible: true
+                    - id: 3
+                      nombre: "Ver detalles de producto"
+                      descripcion: "Permite consultar información detallada de un producto específico."
+                      disponible: true
+                    - id: 4
+                      nombre: "Registrarse"
+                      descripcion: "Permite crear una cuenta para acceder a más funcionalidades."
+                      disponible: true
+                    - id: 5
+                      nombre: "Agregar a favoritos"
+                      descripcion: "Permite guardar productos temporalmente durante la sesión de invitado."
+                      disponible: false
+        '401':
+          description: No autorizado (Sesión inválida o expirada)
+
+components:
+  schemas:
+    # Esquema generaal para errores ()
+    Error:
+      type: object
+      properties:
+        mensaje:
+          type: string
+
+    # Esquema para errores 400
+    ErrorBadRequest:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    # Esquema para errores 401
+    ErrorUnauthorized:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+    # Esquema para errores 409
+    ErrorConflict:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+    # Esquema para errores 500
+    ErrorServer:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+    ErrorForbidden:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+    ErrorNotFound:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+    # Esquemas 
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 540
+        nombre:
+          type: string
+          example: "Brayhan"
+        apellidoPaterno:
+          type: string
+          example: "Hoyos"
+        apellidoMaterno:
+          type: string
+          example: "Hernandez"
+        email:
+          type: string
+          format: email
+          example: "brayhan26@gmail.com"
+    
+    UsuarioInput:
+      type: object
+      properties:
+        nombre:
+          type: string
+          example: "Brayhan Hoyos Modificado"
+        email:
+          type: string
+          format: email
+          example: "Pikachu11@hotmail.com"
+    GuestSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          example: "guest_abc123xyz"
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2026-02-20T12:00:00Z"
+
+    GuestSessionInput:
+      type: object
+      properties:
+        device:
+          type: string
+          example: "Web"
+        ipAddress:
+          type: string
+          example: "192.168.1.10"
+
+    Feature:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: "Ver catálogo"
+        descripcion:
+          type: string
+          example: "Permite visualizar productos disponibles sin iniciar sesión."
+        disponible:
+          type: boolean
+          example: true
