@@ -1,4 +1,4 @@
-const API_REF = 'https://nt189.github.io/Documentacion/Contrato_V1.yaml';
+const API_REF = 'https://nt189.github.io/MicServ1-SOC/Contrato.yaml';
 
 if (!window.location.hash && localStorage.getItem('API_DOC')) {
     window.location.replace(localStorage.getItem('API_DOC'));
