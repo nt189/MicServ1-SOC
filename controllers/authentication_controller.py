@@ -8,7 +8,7 @@ from jose import jwt
 
 from models.authentication_models import User, UserLogin
 from config.db import db
-from config.security import SECRET_KEY, ALGORITHM, ACCESSTOKEN_EXPIRE_MINUTES, REFRESHTOKEN_EXPIRE_DAYS
+from config.security import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 
 ph = PasswordHasher()
 security = HTTPBearer()
@@ -48,8 +48,8 @@ async def register(user: User):
     
     await db.users.insert_one(userDict)
     
-    accessToken = create_token({"sub": str(user.email)}, timedelta(minutes=ACCESSTOKEN_EXPIRE_MINUTES))
-    refreshToken = create_token({"sub": str(user.email)}, timedelta(days=REFRESHTOKEN_EXPIRE_DAYS))
+    accessToken = create_token({"sub": str(user.email)}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    refreshToken = create_token({"sub": str(user.email)}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
     
     return {
         "statusCode": status.HTTP_201_CREATED,
@@ -66,8 +66,8 @@ async def login(userLogin: UserLogin):
             detail="Correo electrónico o contraseña incorrectos."
         )
 
-    accessToken = create_token({"sub": str(userInDb["email"])}, timedelta(minutes=ACCESSTOKEN_EXPIRE_MINUTES))
-    refreshToken = create_token({"sub": str(userInDb["email"])}, timedelta(days=REFRESHTOKEN_EXPIRE_DAYS))
+    accessToken = create_token({"sub": str(userInDb["email"])}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    refreshToken = create_token({"sub": str(userInDb["email"])}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
     return {
         "statusCode": status.HTTP_200_OK,
@@ -93,7 +93,7 @@ async def logout(token: str):
         "message": "Cierre de sesión exitoso. El token ha sido invalidado."
     }
 
-async def refreshToken(refreshToken: str):
+async def refresh_token(refreshToken: str):
     try:
         tokenRevoked = await db.revoked_tokens.find_one({"token": refreshToken})
         if tokenRevoked:

@@ -1,7 +1,7 @@
 ﻿from fastapi import APIRouter, status, Depends
 from models.authentication_models import User, UserLogin
 from controllers.authentication_controller import register, login, logout
-from controllers.authentication_controller import refresh_Token, forgot_password
+from controllers.authentication_controller import refresh_token, forgot_password
 from middleware.authentication_middleware import get_valid_token
 
 router = APIRouter()
