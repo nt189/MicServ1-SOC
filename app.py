@@ -1,4 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from routes import authentication_routes, healthCheck_routes
 from fastapi.middleware.cors import CORSMiddleware
 from config.db import check_db_connection
 
@@ -8,6 +11,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": "Datos de entrada inválidos", "errors": exc.errors()},
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -16,26 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(auth.router, prefix="/api/auth", tags=["Autenticación"])
-# app.include_router(users.router, prefix="/api/users", tags=["Gestión de Usuarios"])
+app.include_router(healthCheck_routes.router, tags=["Health Check"])
+app.include_router(authentication_routes.router, prefix="/api/auth", tags=["Autenticación"])
+# app.include_router(user.router, prefix="/api/users", tags=["Gestión de Usuarios"])
 # app.include_router(guest.router, prefix="/api/guest", tags=["Usuarios Invitados"])
-
-@app.get("/", tags=["Health Check"])
-async def root():
-    return {
-        "service": "MicServ1-SOC - Identity Service",
-        "status": "online",
-        "description": "API operativa"
-    }
-
-@app.get("/health", tags=["Health Check"])
-async def health_check():
-    return {"status": "healthy"}
-
-@app.get("/db/connection/health", tags=["Health Check"])
-async def db_health_check():
-    is_connected = await check_db_connection()
-    if is_connected:
-        return {"status": "connected", "database": "MongoDB"}
-    else:
-        raise HTTPException(status_code=503, detail="Database connection failed")
