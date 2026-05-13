@@ -36,10 +36,7 @@ async def register(user: User):
     if userExists:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, # Cambiar codigo de estado a uno mas ambiuo para evitar ataques de enumeración de usuarios   
-            content={
-                "statusCode": status.HTTP_409_CONFLICT,
-                "detail": "El correo electrónico ya está registrado."
-            } 
+            detail="El correo electrónico ya está registrado." 
         )
 
     userDict = jsonable_encoder(user)
