@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from routes import authentication_routes, healthCheck_routes
+from routes import users_routes
 from fastapi.middleware.cors import CORSMiddleware
 from config.db import check_db_connection
 
@@ -28,5 +29,5 @@ app.add_middleware(
 
 app.include_router(healthCheck_routes.router, tags=["Health Check"])
 app.include_router(authentication_routes.router, prefix="/api/auth", tags=["Autenticación"])
-# app.include_router(user.router, prefix="/api/users", tags=["Gestión de Usuarios"])
+app.include_router(users_routes.router, prefix="/api/users", tags=["Gestión de Usuarios"])
 # app.include_router(guest.router, prefix="/api/guest", tags=["Usuarios Invitados"])
