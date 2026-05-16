@@ -66,6 +66,12 @@ async def login(userLogin: UserLogin):
     accessToken = create_token({"sub": str(userInDb["email"])}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     refreshToken = create_token({"sub": str(userInDb["email"])}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
+    # Guardar el token en el documento del usuario
+    await db.users.update_one(
+        {"email": userInDb["email"]},
+        {"$set": {"token": accessToken}}
+    )
+
     return {
         "statusCode": status.HTTP_200_OK,
         "message": "Inicio de sesión exitoso",
