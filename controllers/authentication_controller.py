@@ -18,6 +18,7 @@ def get_password_hash(password: str) -> str:
 
 def verify_password(hashed_password: str, plain_password: str) -> bool:
     try:
+        print(f"Verificando contraseña: {plain_password} contra hash: {hashed_password}")
         return ph.verify(hashed_password, plain_password)
     except VerifyMismatchError:
         return False
@@ -42,11 +43,13 @@ async def register(user: User, response: Response):
     userDict = jsonable_encoder(user)
     
     userDict["password"] = get_password_hash(userDict["password"])
-    
-    await db.users.insert_one(userDict)
+     
     
     accessToken = create_token({"sub": str(user.email), "auth": True}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     refreshToken = create_token({"sub": str(user.email), "auth": True}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+
+    userDict["token"] = accessToken
+    await db.users.insert_one(userDict)
     
     response.set_cookie(key="accessToken", value=accessToken, samesite="none", httponly=True, secure=True)
     response.set_cookie(key="refreshToken", value=refreshToken, samesite="none", httponly=True, secure=True)

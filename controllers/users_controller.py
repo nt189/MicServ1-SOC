@@ -3,6 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from config.db import db
 from models.user_models import UserUpdate
 from bson import ObjectId
+from controllers.authentication_controller import get_password_hash
 
 
 def mongo_to_json(document):
@@ -25,6 +26,9 @@ async def update_user_profile(token: str, data: UserUpdate):
     user = await db.users.find_one({"token": token})
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+
+    if data.password:
+        data.password = get_password_hash(data.password)
 
     await db.users.update_one({"token": token}, {"$set": data.dict(exclude_unset=True)})
     updated_user = await db.users.find_one({"token": token})
