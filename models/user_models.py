@@ -7,4 +7,5 @@ class UserUpdate(BaseModel):
     lastName: Optional[str] = None
     lastName2: Optional[str] = None
     email: Optional[EmailStr] = None
+    password: Optional[str] = None
     cellPhone: Optional[PhoneNumber] = None
