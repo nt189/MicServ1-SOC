@@ -48,8 +48,8 @@ async def register(user: User, response: Response):
     accessToken = create_token({"sub": str(user.email), "auth": True}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     refreshToken = create_token({"sub": str(user.email), "auth": True}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
     
-    response.set_cookie(key="accessToken", value=accessToken, samesite="none", httponly=True)
-    response.set_cookie(key="refreshToken", value=refreshToken, samesite="none", httponly=True)
+    response.set_cookie(key="accessToken", value=accessToken, samesite="none", httponly=True, secure=True)
+    response.set_cookie(key="refreshToken", value=refreshToken, samesite="none", httponly=True, secure=True)
 
     return {
         "statusCode": status.HTTP_201_CREATED,
@@ -72,8 +72,8 @@ async def login(userLogin: UserLogin, response: Response):
         {"$set": {"token": accessToken}}
     )
 
-    response.set_cookie(key="accessToken", value=accessToken, samesite="none", httponly=True)
-    response.set_cookie(key="refreshToken", value=refreshToken, samesite="none", httponly=True)
+    response.set_cookie(key="accessToken", value=accessToken, samesite="none", httponly=True, secure=True)
+    response.set_cookie(key="refreshToken", value=refreshToken, samesite="none", httponly=True, secure=True)
 
     return {
         "statusCode": status.HTTP_200_OK,
