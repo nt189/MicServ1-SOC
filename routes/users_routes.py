@@ -8,7 +8,7 @@ from controllers.users_controller import (
 )
 from middleware.authentication_middleware import get_valid_token
 
-router = APIRouter(prefix="/api/users", tags=["Gestión de Usuarios"])
+router = APIRouter()
 
 @router.get("/profile", status_code=status.HTTP_200_OK)
 async def read_profile(token: str = Depends(get_valid_token)):

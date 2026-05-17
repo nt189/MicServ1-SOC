@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import HTTPBearer
 from datetime import datetime, timedelta
@@ -31,7 +31,7 @@ def create_token(data: dict, expires_delta: timedelta):
 
 
 
-async def register(user: User):
+async def register(user: User, response: Response):
     userExists = await db.users.find_one({"email": str(user.email)})
     if userExists:
         raise HTTPException(
@@ -45,17 +45,18 @@ async def register(user: User):
     
     await db.users.insert_one(userDict)
     
-    accessToken = create_token({"sub": str(user.email)}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    refreshToken = create_token({"sub": str(user.email)}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+    accessToken = create_token({"sub": str(user.email), "auth": True}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    refreshToken = create_token({"sub": str(user.email), "auth": True}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
     
+    response.set_cookie(key="accessToken", value=accessToken, httponly=True)
+    response.set_cookie(key="refreshToken", value=refreshToken, httponly=True)
+
     return {
         "statusCode": status.HTTP_201_CREATED,
-        "message": "Usuario registrado exitosamente",
-        "accessToken": accessToken,
-        "refreshToken": refreshToken,
+        "message": "Usuario registrado exitosamente"
     }
 
-async def login(userLogin: UserLogin):
+async def login(userLogin: UserLogin, response: Response):
     userInDb = await db.users.find_one({"email": str(userLogin.email)})
     if not userInDb or not verify_password(userInDb["password"], userLogin.password):
         raise HTTPException(
@@ -66,17 +67,17 @@ async def login(userLogin: UserLogin):
     accessToken = create_token({"sub": str(userInDb["email"])}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     refreshToken = create_token({"sub": str(userInDb["email"])}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
-    # Guardar el token en el documento del usuario
     await db.users.update_one(
         {"email": userInDb["email"]},
         {"$set": {"token": accessToken}}
     )
 
+    response.set_cookie(key="accessToken", value=accessToken, httponly=True)
+    response.set_cookie(key="refreshToken", value=refreshToken, httponly=True)
+
     return {
         "statusCode": status.HTTP_200_OK,
         "message": "Inicio de sesión exitoso",
-        "accessToken": accessToken,
-        "refreshToken": refreshToken,
         "user": {
             "name": userInDb["name"],
             "lastName": userInDb["lastName"],
@@ -85,18 +86,21 @@ async def login(userLogin: UserLogin):
         }
     }
 
-async def logout(token: str):
+async def logout(token: str, response: Response):
     await db.revoked_tokens.insert_one({
         "token": token,
         "revoked_at": datetime.utcnow()
     })
     
+    response.delete_cookie(key="accessToken")
+    response.delete_cookie(key="refreshToken")
+
     return {
         "statusCode": status.HTTP_200_OK,
         "message": "Cierre de sesión exitoso. El token ha sido invalidado."
     }
 
-async def refresh_token(refreshToken: str):
+async def refresh_token(refreshToken: str, response: Response):
     try:
         tokenRevoked = await db.revoked_tokens.find_one({"token": refreshToken})
         if tokenRevoked:
@@ -120,12 +124,13 @@ async def refresh_token(refreshToken: str):
                 detail="El usuario ya no existe."
             )
 
-        accessToken = create_token({"sub": email}, timedelta(minutes=ACCESSTOKEN_EXPIRE_MINUTES))
+        accessToken = create_token({"sub": email}, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         
+        response.set_cookie(key="accessToken", value=accessToken, httponly=True)
+
         return {
             "statusCode": status.HTTP_200_OK,
-            "message": "Access token renovado exitosamente",
-            "accessToken": accessToken
+            "message": "Access token renovado exitosamente"
         }
 
     except jwt.ExpiredSignatureError:
@@ -151,3 +156,55 @@ async def forgot_password(email: str):
         "statusCode": status.HTTP_200_OK,
         "message": "Si el correo electrónico está registrado, recibirás instrucciones para restablecer tu contraseña."
     }
+
+async def reset_password(reset_token: str, new_password: str):
+    tokenRevoked = await db.revoked_tokens.find_one({"token": reset_token})
+    if tokenRevoked:
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El token proporcionado ya ha sido utilizado o revocado."
+        )
+
+    try:
+        payload = jwt.decode(reset_token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        token_type: str = payload.get("type")
+
+        if token_type != "reset_password":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token de tipo incorrecto."
+            )
+
+        userInDb = await db.users.find_one({"email": email})
+        if not userInDb:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado."
+            )
+
+        hashed_password = get_password_hash(new_password)
+        await db.users.update_one({"email": email}, {"$set": {"password": hashed_password}})
+
+        # Invalidar el token después de usarlo con éxito
+        await db.revoked_tokens.insert_one({
+            "token": reset_token,
+            "revoked_at": datetime.utcnow()
+        })
+
+        return {
+            "statusCode": status.HTTP_200_OK,
+            "message": "Contraseña restablecida exitosamente."
+        }
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El token de restablecimiento ha expirado."
+        )
+    except jwt.JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de restablecimiento inválido."
+        )

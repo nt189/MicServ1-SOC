@@ -15,7 +15,11 @@ async def get_user_profile(token: str):
     user = await db.users.find_one({"token": token})
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
-    return mongo_to_json(user)
+    mongo_to_json(user)
+    user.pop("_id", None)
+    user.pop("password", None)  
+    user.pop("token", None)
+    return user
 
 async def update_user_profile(token: str, data: UserUpdate):
     user = await db.users.find_one({"token": token})
@@ -25,7 +29,12 @@ async def update_user_profile(token: str, data: UserUpdate):
     await db.users.update_one({"token": token}, {"$set": data.dict(exclude_unset=True)})
     updated_user = await db.users.find_one({"token": token})
 
-    return mongo_to_json(updated_user)
+    mongo_to_json(user)
+    updated_user.pop("_id", None)
+    updated_user.pop("password", None)  
+    updated_user.pop("token", None)
+
+    return updated_user
 
 async def delete_user_profile(token: str):
     user = await db.users.find_one({"token": token})
