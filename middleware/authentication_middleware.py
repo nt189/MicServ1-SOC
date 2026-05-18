@@ -22,3 +22,5 @@ async def get_valid_token(request: Request) -> str:
             detail="Token no válido o sesión expirada."
         )
     return token
+
+

@@ -42,7 +42,6 @@ Este microservicio proporciona funcionalidades críticas para:
 - Análisis de patrones de comportamiento sospechoso
 - Implementación de CAPTCHA y mecanismos anti-bot
 - Rate limiting para prevenir ataques de fuerza bruta
-- Detección de actividad anómala mediante machine learning
 - Bloqueo automático de cuentas comprometidas
 
 ## 🏗️ Estructura del Proyecto
@@ -50,32 +49,27 @@ Este microservicio proporciona funcionalidades críticas para:
 ```
 MicServ1-SOC/
 │
+├── app.py           # Punto de entrada de la aplicación FastAPI
+├── test.py          # Script de prueba de resiliencia (Anti-Bot Testing)
+├── requirements.txt # Dependencias del proyecto
+├── Dockerfile       # Configuración para contenedorización
+├── config/          # Configuración de BD, variables de entorno y seguridad
+├── controllers/     # Lógica de negocio y controladores (Auth, Users)
+├── models/          # Modelos de datos y esquemas de Pydantic
+├── middleware/      # Middleware para validación de tokens
 ├── routes/          # Definiciones de rutas y endpoints del API
-│   └── .gitkeep
-│
-├── controllers/     # Lógica de negocio y controladores
-│   └── .gitkeep
-│
-├── models/          # Modelos de datos y esquemas
-│   └── .gitkeep
-│
-├── middleware/      # Middleware para autenticación, validación y procesamiento
-│   └── .gitkeep
-│
-├── config/          # Archivos de configuración del servicio
-│   └── .gitkeep
-│
-└── README.md        # Documentación del proyecto
+└── docs/            # Documentación y front-end de prueba de la API
 ```
 
-## 🔧 Tecnologías Previstas
-- **Lenguaje**: Python
+## 🔧 Tecnologías Utilizadas
+- **Lenguaje**: Python 3.x
 - **API Framework**: FastAPI
-- **Base de Datos**: No relacional MongoDB
+- **Base de Datos**: MongoDB (Motor asíncrono)
 - **Autenticación**: Python JOSE JWT (JSON Web Tokens)
-- **Seguridad**: bcrypt, ratelimit, Redis
+- **Seguridad**: Argon2 (Hashing), SlowAPI (Rate limiting), Cloudflare Turnstile
 - **Validación**: Pydantic
-- **Documentación API**: Swagger/OpenAPI
+- **Cliente HTTP**: httpx (Validaciones de Turnstile)
+- **Documentación API**: Swagger/OpenAPI (Integrado en FastAPI)
 
 ## 🚀 Características Principales
 
@@ -101,27 +95,24 @@ MicServ1-SOC/
 ## 🔒 Seguridad
 
 ### Medidas Implementadas
-- Encriptación de contraseñas con bcrypt
-- Validación de entrada en todos los endpoints
-- Rate limiting para prevenir ataques DDoS
-- Gestión de tokens de sesión (JWT)
-- Protección CSRF
-- Sanitización de datos
-- Logging de auditoría
+- Encriptación de contraseñas con **Argon2**
+- Validación de entrada en todos los endpoints con Pydantic
+- Rate limiting (**SlowAPI**) para prevenir ataques DDoS y bots (Máx. 100 peticiones/min)
+- Gestión de tokens de sesión (JWT) y cookies seguras (`HttpOnly`, `Secure`)
+- Configuración de CORS
+- Script de validación de resiliencia `test.py`
 
 ### Detección de Bots
-- Análisis de User-Agent
-- Verificación de patrones de tráfico
-- CAPTCHA en operaciones sensibles
-- Blacklisting de IPs sospechosas
-- Análisis de tiempo de respuesta
+- **Cloudflare Turnstile** integrado en operaciones sensibles (Registro y Login)
+- Rate limiting estricto global para prevención de fuerza bruta
+- Rechazo automático de peticiones masivas (HTTP 429)
 
 ## 📝 Estado del Proyecto
 
-**Versión**: 0.1.0 (Estructura Inicial)
-**Estado**: En Desarrollo
+**Versión**: 1.0.0
+**Estado**: Estable / En Desarrollo Continuo
 
-### Próximos Pasos
+### Próximos Pasos (Opcionales)
 1. Implementación de modelos de datos
 2. Configuración de base de datos
 3. Desarrollo de controladores principales

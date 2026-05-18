@@ -9,10 +9,12 @@ class User(BaseModel):
     email: EmailStr
     password: str
     cellPhone: PhoneNumber
+    cfToken: str
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    cfToken: str
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr

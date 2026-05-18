@@ -5,10 +5,12 @@ from datetime import datetime, timedelta
 from argon2.exceptions import VerifyMismatchError
 from argon2 import PasswordHasher
 from jose import jwt
+import httpx
 
 from models.authentication_models import User, UserLogin
 from config.db import db
 from config.security import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+from config.envLoader import capchaSecretKey
 
 ph = PasswordHasher()
 security = HTTPBearer()
@@ -18,7 +20,6 @@ def get_password_hash(password: str) -> str:
 
 def verify_password(hashed_password: str, plain_password: str) -> bool:
     try:
-        print(f"Verificando contraseña: {plain_password} contra hash: {hashed_password}")
         return ph.verify(hashed_password, plain_password)
     except VerifyMismatchError:
         return False
@@ -30,9 +31,28 @@ def create_token(data: dict, expires_delta: timedelta):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-
+async def verify_turnstile_token(token: str) -> bool:
+    if not capchaSecretKey:
+        return True 
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": capchaSecretKey,
+                "response": token
+            }
+        )
+        result = response.json()
+        return result.get("success", False)
 
 async def register(user: User, response: Response):
+    is_valid_captcha = await verify_turnstile_token(user.cfToken)
+    if not is_valid_captcha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Validación de CAPTCHA fallida."
+        )
+
     userExists = await db.users.find_one({"email": str(user.email)})
     if userExists:
         raise HTTPException(
@@ -41,6 +61,8 @@ async def register(user: User, response: Response):
         )
 
     userDict = jsonable_encoder(user)
+    
+    userDict.pop("cfToken", None)
     
     userDict["password"] = get_password_hash(userDict["password"])
      
@@ -60,6 +82,13 @@ async def register(user: User, response: Response):
     }
 
 async def login(userLogin: UserLogin, response: Response):
+    is_valid_captcha = await verify_turnstile_token(userLogin.cfToken)
+    if not is_valid_captcha:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Validación de CAPTCHA fallida."
+        )
+
     userInDb = await db.users.find_one({"email": str(userLogin.email)})
     if not userInDb or not verify_password(userInDb["password"], userLogin.password):
         raise HTTPException(
@@ -157,7 +186,8 @@ async def forgot_password(email: str):
 
     return {
         "statusCode": status.HTTP_200_OK,
-        "message": "Si el correo electrónico está registrado, recibirás instrucciones para restablecer tu contraseña."
+        "message": "Si el correo electrónico está registrado, recibirás instrucciones para restablecer tu contraseña.",
+        "token": reset_token # Para pruebas, se devuelve el token en la respuesta. En producción, esto no se haría y solo se enviaría por correo.
     }
 
 async def reset_password(reset_token: str, new_password: str):
