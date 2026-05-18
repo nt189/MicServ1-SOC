@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from routes import authentication_routes, healthCheck_routes
-from routes import users_routes
+from routes import users_routes, guest_routes
 from config.db import check_db_connection
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
