@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Restablecer Contraseña</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/style.css">
+    </head> 
+    <body class="cuerpo">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-custom shadow">
+        <div class="container-fluid">
+            <header class="header">
+                <h1>Urban Market | Restablecer Contraseña</h1>
+            </header>
+        </div>
+        </nav>
+
+        <div class="container mt-5 mb-5">
+            <div class="row justify-content-center">
+                <div class="card bg-custom p-3" style="max-width: 500px;">
+                    <div class="card-header bg-custom2 border-0 text-center fs-5 fw-bold">
+                        Crear nueva contraseña
+                    </div>
+
+                    <div class="card-body">
+                        <form id="resetPassword">
+                            <div class="mb-3">
+                                <label for="new_password" class="form-label text-muted">Nueva Contraseña</label>
+                                <input type="password" class="form-control" id="new_password" placeholder="Ingrese nueva contraseña" required>
+                                <div class="form-text text-muted small mt-1">
+                                    Mín. 8 caracteres, números, mayúsculas y caracteres especiales.
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label text-muted">Confirmar Contraseña</label>
+                                <input type="password" class="form-control" id="confirm_password" placeholder="Confirme la contraseña" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mt-4 shadow-sm">Guardar Contraseña</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="js/cambioContrasena.js"></script>
+    </body>
+</html>

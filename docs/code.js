@@ -31,6 +31,7 @@ function router() {
             <a href="#redoc">Redoc</a>
             <a href="#scalar">Scalar</a>
             <a href="#elements">Elements</a>
+            <a href="/page/login.html">Test</a>
         </nav>
     `;
 
