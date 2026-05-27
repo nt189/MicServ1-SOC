@@ -97,8 +97,8 @@ button:hover {
     transform: translateY(-2px);
 }
 
-.background-color-custom1 {
-    background-color: #e7e7e7 !important;
+.card-header {
+    background-color: #ffffff !important;
 }
 
 .footer {
@@ -137,6 +137,19 @@ button:hover {
     border-top: 1px solid #333;
     font-size: 13px;
     color: #888;
+}
+
+.text-rojo-custom{
+    color: #d13a3a !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.formulario-500{
+    max-width: 500px;
+}
+
+.formulario-900{
+    max-width: 900px !important;
 }
 
 @media (max-width: 768px) {

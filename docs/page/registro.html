@@ -11,111 +11,82 @@
     </head>
     <body class="cuerpo">
 
-    <nav class="navbar">
-            <div class="nav-container">
-                <div class="logo">
-                    <img src="img/UMA.png" alt="Urban Market" class="logo-image">
-                    <span class="logo-text">URBAN MARKET</span>
-                </div>
-                <div class="nav-links">
-                    <a href="#">Inicio</a>
-                    <a href="#">Productos</a>
-                    <a href="#">Mi Cuenta</a>
-                    <a href="#">Contacto</a>
-                </div>
-            </div>
-        </nav>
+        <nav class="navbar" id="header"></nav>
 
         <div class="container mt-5 mb-5">
             <div class="row justify-content-center">
-                <div class="card bg-custom p-3">
-                    <div class="card-header bg-custom2 border-0 text-center fs-5 fw-bold">
+                <div class="card bg-custom p-3 formulario-900">
+                    <div class="card-header bg-custom2 border-0 text-center fs-5 fw-bold background-color-custom1 text-rojo-custom">
                         Crear una cuenta para poder ser cliente o miembro vip
                         <div class="text-muted fs-6 fw-normal">Nuevos clientes</div>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card-body ">
                         <form id="registro">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label text-muted">Nombre</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="apellidoP" class="form-label text-muted">Apellido Paterno</label>
-                                <input type="text" class="form-control" id="apellidoP" name="apellidoP" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="apellidoM" class="form-label text-muted">Apelldio Materno</label>
-                                <input type="text" class="form-control" id="apellidoM" name="apellidoM" >
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="correo" class="form-label text-muted">Correo Electronico</label>
-                                <input type="email" class="form-control" id="correo" name="correo" placeholder="correo@example.com" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="contraseña" class="form-label text-muted">Contraseña</label>
-                                <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña" required>
-                                <div class="form-text text-muted small mt-1">
-                                    Mín. 8 caracteres y uso de combinación alfanumérica.
+                            <div class="row">
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="nombre" class="form-label text-muted">Nombre</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
                                 </div>
-                            </div>
 
-                            <div class="mb-3">
-                                <label for="confirmacion" class="form-label text-muted">Confirmar contraseña</label>
-                                <input type="password" class="form-control" id="confirmacionP" placeholder="confirme su contraseña" required>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="apellidoP" class="form-label text-muted">Apellido Paterno</label>
+                                    <input type="text" class="form-control" id="apellidoP" name="apellidoP" required>
+                                </div>
 
-                            </div>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="apellidoM" class="form-label text-muted">Apelldio Materno</label>
+                                    <input type="text" class="form-control" id="apellidoM" name="apellidoM" >
+                                </div>
 
-                            <div class="mb-3">
-                                <label for="telefono" class="form-label text-muted">Numero de Celular</label>
-                                <div class="input-group">
-                                    <select class="form-select" id="lada" style="max-width: 130px;">
-                                        <option value="+52">+52 (MX)</option>
-                                        <option value="+1">+1 (US/CA)</option>
-                                        <option value="+34">+34 (ES)</option>
-                                        <option value="+54">+54 (AR)</option>
-                                        <option value="+57">+57 (CO)</option>
-                                    </select>
-                                    <input type="tel" class="form-control" id="number" name="number" placeholder="2223334444" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos" required>
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="correo" class="form-label text-muted">Correo Electronico</label>
+                                    <input type="email" class="form-control" id="correo" name="correo" placeholder="correo@example.com" required>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="contraseña" class="form-label text-muted">Contraseña</label>
+                                    <input type="password" class="form-control" id="password" placeholder="Ingrese su contraseña" required>
+                                    <div class="form-text text-muted small mt-1">
+                                        Mín. 8 caracteres y uso de combinación alfanumérica.
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="confirmacion" class="form-label text-muted">Confirmar contraseña</label>
+                                    <input type="password" class="form-control" id="confirmacionP" placeholder="confirme su contraseña" required>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="telefono" class="form-label text-muted">Numero de Celular</label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="lada" style="max-width: 130px;">
+                                            <option value="+52">+52 (MX)</option>
+                                            <option value="+1">+1 (US/CA)</option>
+                                            <option value="+34">+34 (ES)</option>
+                                            <option value="+54">+54 (AR)</option>
+                                            <option value="+57">+57 (CO)</option>
+                                        </select>
+                                        <input type="tel" class="form-control" id="number" name="number" placeholder="2223334444" pattern="[0-9]{10}" title="Debe contener exactamente 10 dígitos" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-6 mb-3">
+                                    <div class="cf-turnstile mb-3 d-flex justify-content-center" data-sitekey="0x4AAAAAADRirDHC0cM9aXKS" data-theme="light"></div>
                                 </div>
                             </div>
                             
-                            <div class="cf-turnstile mb-3 d-flex justify-content-center" data-sitekey="0x4AAAAAADRirDHC0cM9aXKS" data-theme="light"></div>
 
-                            <center><button type="submit" class="btn btn-primary w-50 mt-3 shadow-sm justify-content-center">registrar</button></center>
+                            <center><button type="submit" class="">Registrar</button></center>
                         </form>
                     </div>
-                    <div> Si ya tienes una cuenta da click <a href="login.html">Aquí</a></div>
+                    <center><span>Si ya tienes una cuenta da click <a href="login.html">Aquí</a></span></center>
                 </div>
             </div>
         </div>
 
-        <footer class="footer">
-            <div class="footer-container">
-                <div class="footer-section">
-                    <h4>Urban Market</h4>
-                    <p>Tu tienda de confianza</p>
-                    <p>✨ Calidad y estilo ✨</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Atención al cliente</h4>
-                    <p>📞 800-URBAN-MK</p>
-                    <p>✉️ soporte@urbanmarket.com</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Horario</h4>
-                    <p>Lun a Vie: 9am - 7pm</p>
-                    <p>Sábado: 10am - 2pm</p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>Urban Market 2026 - Todos los derechos reservados</p>
-            </div>
-        </footer>
+        <footer class="footer" id="footer"></footer>
     </body>
     <script src="js/registro.js"></script>
+    <script src="js/htmlComponents.js"></script>
 </html>
