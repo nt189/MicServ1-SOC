@@ -8,8 +8,8 @@ function header(){
                 <span class="logo-text">URBAN MARKET</span>
             </div>
             <div class="nav-links">
-                <a href="#">Inicio</a>
-                <a href="#">Productos</a>
+                <a href="http://10.108.81.84:4200/">Inicio</a>
+                <a href="http://10.108.81.84:4200/">Productos</a>
                 <a href="userAccount.html">Mi Cuenta</a>
                 <a href="#footer">Contacto</a>
             </div>

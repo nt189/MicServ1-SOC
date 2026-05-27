@@ -20,7 +20,7 @@ async function fetchWithAuth(url, options = {}) {
         } else {
             console.error("No se pudo refrescar el token. Redirigiendo al login.");
             alert('Sesión expirada. Por favor inicie sesión nuevamente.');
-            window.location.href = 'login.html';
+            window.location.href = 'https://nt189.github.io/MicServ1-SOC/page/login.html';
             throw new Error("Sesión expirada");
         }
     }
